@@ -4,7 +4,7 @@
 
 1. git clone git@github.com:happy-ryo/laravel-base.git
 2. cd backend
-3. Clone your project and setup.
+3. Clone your project.
 4. cd ../
 5. cp .env.example .env
 6. docker-compose up -d --build
