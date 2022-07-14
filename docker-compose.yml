@@ -1,28 +1,57 @@
-version: "3.8"
-services: 
-    app:
-        build: ./infra/php
-        volumes: 
-            - ./backend/${APP_NAME}:/work
-    
-    web:
-        image: nginx:1.18-alpine
-        ports: 
-            - 10080:80
-        volumes: 
-            - ./backend/${APP_NAME}:/work
-            - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf
-        working_dir: /work
+version: "3.9"
+services:
+  app:
+    depends_on:
+      - php-daemon
+    build:
+      context: ./infra/php
+      args:
+        - NEW_RELIC_AGENT_VERSION=${NEW_RELIC_AGENT_VERSION}
+        - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
+        - NEW_RELIC_APPNAME=${NEW_RELIC_APPNAME}
+    volumes:
+      - ./backend/${APP_NAME}:/work
 
-    db:
-        build: ./infra/mysql
-        ports: 
-            - 33060:3306
-        volumes: 
-            - db-store:/var/lib/mysql
+  web:
+    image: nginx:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ./backend/${APP_NAME}:/work
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf.template
+    environment:
+      - APP_NAME=${APP_NAME}
+    # skimping
+    command: /bin/sh -c "envsubst '$$APP_NAME' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    working_dir: /work
 
-    redis:
-        build: ./infra/redis
+  db:
+    build: ./infra/mysql
+    ports:
+      - 33060:3306
+    volumes:
+      - db-store:/var/lib/mysql
 
-volumes: 
-    db-store:
+  redis:
+    build: ./infra/redis
+
+  php-daemon:
+    image: newrelic/php-daemon
+
+  agent:
+    container_name: newrelic-infra
+    image: newrelic/infrastructure:latest
+    cap_add:
+      - SYS_PTRACE
+    network_mode: host
+    pid: host
+    privileged: true
+    volumes:
+      - /:/host:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      NRIA_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+    restart: unless-stopped
+
+volumes:
+  db-store:
