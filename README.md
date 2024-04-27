@@ -13,7 +13,8 @@ The minimum environment required to run Laravel and New Relic.
 8. docker-compose exec app bash
 9. Please, set up your project.
 
+Please delete the New Relic-related settings if they are unnecessary.
 
 ## Option.
 
-Environment variables may be set instead of using .env.
+Environment variables may be set instead of using ```.env```.
