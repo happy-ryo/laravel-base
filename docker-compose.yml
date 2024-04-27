@@ -39,21 +39,21 @@ services:
   php-daemon:
     image: newrelic/php-daemon
 
-  # agent:
-  #   command: /bin/sh -c "if [ -z \"${NEW_RELIC_LICENSE_KEY}\" ]; then echo 'New Relic License Key is missing, skipping setup.'; else echo 'New Relic License Key is set, proceeding with setup.'; fi"
-  #   container_name: newrelic-infra
-  #   image: newrelic/infrastructure:latest
-  #   cap_add:
-  #     - SYS_PTRACE
-  #   network_mode: host
-  #   pid: host
-  #   privileged: true
-  #   volumes:
-  #     - /:/host:ro
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   environment:
-  #     NRIA_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-  #   restart: unless-stopped
+  agent:
+    command: /bin/sh -c "if [ -z \"${NEW_RELIC_LICENSE_KEY}\" ]; then echo 'New Relic License Key is missing, setup cannot proceed.' && exit 1; else echo 'New Relic License Key is set, proceeding with setup.'; fi"
+    container_name: newrelic-infra
+    image: newrelic/infrastructure:latest
+    cap_add:
+      - SYS_PTRACE
+    network_mode: host
+    pid: host
+    privileged: true
+    volumes:
+      - /:/host:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      NRIA_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+    restart: on-failure
 
   node:
     image: node:latest
